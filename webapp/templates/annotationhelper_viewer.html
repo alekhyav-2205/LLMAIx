@@ -1,0 +1,195 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="nested-container">
+
+    <div class="container-fluid px-4">
+        <a class="btn btn-outline-info mb-4" href="{{ url_for('annotationhelper.annotationhelperoverview', job_id=job_info['job_id']) }}">
+            <i class="bi bi-arrow-left-circle"></i> <b>Back to Annotation Helper Summary Page</b>
+        </a>
+    
+        <h2 class="mb-4">Annotation Helper Summary Page</h2>
+    
+        {% if record_status == "completed" %}
+        <span class="badge bg-success mb-2">Completed</span>
+        {% elif record_status == "pending" %}
+        <span class="badge bg-warning mb-2">Pending</span>
+        {% endif %}
+    
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0">Report {{ record_index + 1 }}/{{ job_info['number_of_records'] }}: {{ record_id }}</h4>
+            <button class="btn btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMetadata" aria-expanded="false" aria-controls="collapseMetadata">
+                <i class="bi bi-info-circle"></i> Metadata
+            </button>
+        </div>
+    
+        <div class="collapse mb-4" id="collapseMetadata">
+            <div class="card card-body shadow-sm">
+                <pre>{{ job_info['metadata'] }}</pre>
+            </div>
+        </div>    
+    
+        <div class="row">
+            <div class="col-lg-6">
+    
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="card-title mb-0">Check the Annotation</h3>
+                    </div>
+                    <div class="card-body">
+                        <form action="" method="post" enctype="multipart/form-data">
+                            {{ form.hidden_tag() }}
+    
+                            <style>
+                                input[type="checkbox"] {
+                                    transform: scale(1);
+                                }
+    
+                                .hidden {
+                                    display: none;
+                                }
+    
+                                .custom-checkbox {
+                                    height: calc(1.5em + .75rem + 2px); 
+                                    width: calc(1.5em + .75rem + 2px); 
+                                    margin-right: 0.5rem;
+                                }
+    
+                                .d-flex.align-items-center {
+                                    height: 100%;
+                                }
+                                
+                                td {
+                                    vertical-align: middle;
+                                }
+                            </style>
+    
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Label</th>
+                                        <th class="hidden">LLM Field</th>
+                                        <th>Annotation</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for label_entry in form.labels %}
+                                    <tr>
+                                        <td>
+                                            {{ label_entry.label_name(class="form-control", disabled="disabled") }}
+                                            <input type="hidden" name="{{ label_entry.label_name.name }}" value="{{ label_entry.label_name.data }}">
+                                            <input type="hidden" name="{{ label_entry.label_type.name }}" value="{{ label_entry.label_type.data }}">
+                                        </td>
+                                        <td class="hidden">
+                                            {% if label_entry.label_type.data == 'stringmatch' %}
+                                                {{ label_entry.llm_string(class="form-control", disabled="disabled") }}
+                                                <input type="hidden" name="{{ label_entry.llm_string.name }}" value="{{ label_entry.llm_string.data }}">
+                                            {% elif label_entry.label_type.data == 'multiclass' %}
+                                                {{ label_entry.llm_categories(class="form-select", disabled="disabled") }}
+                                                <input type="hidden" name="{{ label_entry.llm_categories.name }}" value="{{ label_entry.llm_categories.data }}">
+                                            {% elif label_entry.label_type.data == 'boolean' %}
+                                                {{ label_entry.llm_boolean(class="form-check-input", disabled="disabled") }}
+                                                <input type="hidden" name="{{ label_entry.llm_boolean.name }}" value="{{ label_entry.llm_boolean.data }}">
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if label_entry.label_type.data == 'stringmatch' %}
+                                                {{ label_entry.annotator_string(class="form-control") }}
+                                            {% elif label_entry.label_type.data == 'multiclass' %}
+                                                {{ label_entry.annotator_categories(class="form-select") }}
+                                            {% elif label_entry.label_type.data == 'boolean' %}
+                                                <div class="d-flex align-items-center h-100">
+                                                    {{ label_entry.annotator_boolean(class="form-check-input custom-checkbox") }}
+                                                </div>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+    
+                            <input type="hidden" name="job_id" value="{{ job_id }}"> 
+                            <input type="hidden" name="record_id" value="{{ record_id }}">
+                    
+                            <!-- <div class="row p-3">
+                                <div class="form-group col-12">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        {% if previous_record %}
+                                        <div>
+                                            <input id="submit_previous" type="submit" name="submit_previous" class="btn btn-secondary">
+                                                <i class="bi bi-arrow-left-circle"></i> Previous
+                                            </input>
+                                        </div>
+                                        {% endif %}
+                                        <div>
+                                            <input id="submit_save" type="submit" name="submit_save" class="btn btn-primary">
+                                                <i class="bi bi-save"></i> Save
+                                            </button>
+                                        </div>
+                                        {% if next_record %}
+                                        <div>
+                                            <button id="submit_next" type="submit" name="submit_next" class="btn btn-secondary">
+                                                Next <i class="bi bi-arrow-right-circle"></i>
+                                            </button>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div> -->
+
+
+                            <div class="row p-3">
+                                <div class="form-group col-12">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        {% if previous_record %}
+                                        <div>
+                                            {{ form.submit_previous(class="btn btn-secondary") }}
+                                        </div>
+                                        {% endif %}
+                                        <div>
+                                            {{ form.submit_save(class="btn btn-primary") }}
+                                        </div>
+                                        {% if next_record %}
+                                        <div>
+                                            {{ form.submit_next(class="btn btn-secondary") }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+    
+                        </form>
+                    </div>
+                </div>
+            
+            </div>
+            <div class="col-lg-6">
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="card-title mb-0">Check the Annotation</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <iframe src="{{ url_for('annotationhelper.annotationhelperpdfprovider', job_id=job_info['job_id'], record_id=record_id) }}" height="800px" frameborder="0" width="100%"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+
+<style>
+    .nested-container {
+        position: absolute;
+        left: 50%;
+        /* Position the left edge of the container at the horizontal center */
+        transform: translateX(-50%);
+        /* Move the container to the left by half of its width */
+        width: calc(90vw - 30px);
+        padding: 30px 15px;
+    }
+</style>
+
+{% endblock %}

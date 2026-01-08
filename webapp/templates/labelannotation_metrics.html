@@ -1,0 +1,288 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="nested-container">
+
+    <a class="btn btn-outline-info mb-3" href="{{ url_for('labelannotation.main') }}">↩ <i><b>Back to Label Annotation Form</b></i></a>
+
+
+    <h2>Label Annotation Summary</h2>
+
+    </h3>
+
+    <div class="card mt-3 mb-3 shadow-sm">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                {% if 'job_name' in report_summary_dict['metadata']['llm_processing'] %}
+                <h3>Metrics for {{ report_summary_dict['metadata']['llm_processing']['job_name'] }}</h3>
+                {% else %}
+                <h3>Metrics</h3>
+                {% endif %}
+
+                <div>
+                    <span class="badge rounded-pill text-bg-primary">Total Reports: {{ report_summary_dict['report_list']|count }}</span>
+                    <span class="badge rounded-pill text-bg-info">{{ report_summary_dict['metadata']['llm_processing']['model_name']}}</span>
+                    {% if 'mode' in report_summary_dict['metadata']['llm_processing'] %}
+                    <span class="badge rounded-pill text-bg-success">{{ report_summary_dict['metadata']['llm_processing']['mode']}}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+
+            <nav>
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="home-tab" data-bs-toggle="tab"
+                            data-bs-target="#home-tab-pane" type="button" role="tab" aria-controls="home-tab-pane"
+                            aria-selected="true">All Labels</button>
+                    </li>
+                    {% for key, value in report_summary_dict['accumulated_metrics']['label_wise'].items() %}
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="scores-tab-{{ key }}" data-bs-toggle="tab"
+                            data-bs-target="#scores-tab-{{ key }}-pane" type="button" role="tab"
+                            aria-controls="scores-tab-{{ key }}-pane" aria-selected="false">{{ key }}</button>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </nav>
+
+            <div class="tab-content mt-3" id="myTabContent">
+                <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab"
+                    tabindex="0">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-bordered table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Metric</th>
+                                            <th scope="col">Macro Score</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <th scope="row">Accuracy</th>
+                                            <td>{{
+                                                report_summary_dict['accumulated_metrics']['overall']['accuracy'] | round(2)
+                                                }}
+                                            </td>
+                                        </tr>
+                                        
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- <div class="col-md-6" id="confusion_matrix">
+                                <img src="{{ url_for('labelannotation.labelannotationcacheprovider', file_id=report_summary_dict['accumulated_metrics']['overall']['confusion_matrix']) }}"
+                                    class="img" height="300px">
+                                
+                            </div> -->
+                        </div>
+                    </div>
+
+                </div>
+                {% for label in report_summary_dict['accumulated_metrics']['label_wise'].keys() %}
+
+                <div class="tab-pane fade" id="scores-tab-{{ label }}-pane" role="tabpanel"
+                    aria-labelledby="scores-tab-{{ label }}" tabindex="0">
+                    <div class="container">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h3></h3>
+                            <div>
+                                <span class="badge rounded-pill text-bg-primary">{{ label_type_mapping[label]['label_type'] }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-bordered table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Metrics for {{ label }}</th>
+                                            <th scope="col">Macro Score</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <th scope="row">Accuracy</th>
+                                            <td>{{ report_summary_dict['accumulated_metrics']['label_wise'][label]['accuracy'] | round(2) }}</td>
+                                        </tr>
+                                        {% if label_type_mapping[label]['label_type'] == 'boolean' or label_type_mapping[label]['label_type'] == 'multiclass' %}
+                                        <tr>
+                                            <th scope="row">F1 Score</th>
+                                            <td>{{ report_summary_dict['accumulated_metrics']['label_wise'][label]['f1'] | round(2) }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">Precision</th>
+                                            <td>{{ report_summary_dict['accumulated_metrics']['label_wise'][label]['precision'] | round(2) }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">Recall</th>
+                                            <td>{{ report_summary_dict['accumulated_metrics']['label_wise'][label]['recall'] | round(2) }}
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+
+                                        {% if label_type_mapping[label]['label_type'] == 'boolean' %}
+                                        <tr>
+                                            <th scope="row">False Positive Rate</th>
+                                            <td>{{ report_summary_dict['accumulated_metrics']['label_wise'][label]['false_positive_rate'] | round(2) }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">False Negative Rate</th>
+                                            <td>{{ report_summary_dict['accumulated_metrics']['label_wise'][label]['false_negative_rate'] | round(2) }}
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                        
+                                    </tbody>
+                                </table>
+                            </div>
+                            <!-- <div class="col-md-6">
+                                <img src="{{ url_for('report_redaction.reportredactionconfusionmatrix', job_id=job_id, label=label) }}"
+                                    class="img" height="300px">
+                            </div> -->
+                            {% if label_type_mapping[label]['label_type'] == 'stringmatch' %}
+                            <div class="col-md-3">
+                                <table class="table table-bordered table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Matched</th>
+                                            <th scope="col">Not Matched</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="bg-success-subtle"><b>{{ report_summary_dict['accumulated_metrics']['label_wise'][label]['match'] }}</b></td>
+                                            <td class="bg-danger-subtle"><b>{{ report_summary_dict['accumulated_metrics']['label_wise'][label]['no_match'] }}</b></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="col-md-6" id="confusion_matrix">
+                                <img src="{{ url_for('labelannotation.labelannotationcacheprovider', file_id=report_summary_dict['accumulated_metrics']['label_wise'][label]['confusion_matrix']) }}"
+                                    class="img" height="300px">
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+            </div>
+        </div>
+
+    </div>
+
+
+    <div class="btn-group mb-3">
+        <a href="labelannotationdownload" class="btn btn-outline-secondary"><i class="bi bi-download"></i> Download All</a>
+        <button class="btn btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMetadata"
+            aria-expanded="false" aria-controls="collapseMetadata">
+            <i class="bi bi-info-circle"></i> Show Metadata
+        </button>
+
+    </div>
+
+    <div class="collapse" id="collapseMetadata">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3>Experiment Metadata</h3>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered table-hover">
+                    <tbody>
+                        <tr>
+                            <th>Preprocessing Date</th>
+                            <td>{{ report_summary_dict['metadata']['preprocessing']['date']}}</td>
+                        </tr>
+                        <tr>
+                            <th>LLM Processing Date</th>
+                            <td>{{ report_summary_dict['metadata']['llm_processing']['date']}}</td>
+                        </tr>
+                        <tr>
+                            <th>Model Name</th>
+                            <td>{{ report_summary_dict['metadata']['llm_processing']['model_name']}}</td>
+                        </tr>
+                        <tr>
+                            <th>Prompt</th>
+                            <td style="overflow:hidden">{{ report_summary_dict['metadata']['llm_processing']['prompt']}}</td>
+                        </tr>
+                        <!-- <tr>
+                            <th>Symptoms</th>
+                            <td>{{ report_summary_dict['metadata']['llm_processing']['symptoms']}}</td>
+                        </tr> -->
+                        <tr>
+                            <th>Temperature</th>
+                            <td>{{ report_summary_dict['metadata']['llm_processing']['temperature']}}</td>
+                        </tr>
+                        <tr>
+                            <th>Top K</th>
+                            <td>{{ report_summary_dict['metadata']['llm_processing']['top_k']}}</td>
+                        </tr>
+                        <tr>
+                            <th>Top P</th>
+                            <td>{{ report_summary_dict['metadata']['llm_processing']['top_p']}}</td>
+                        </tr>
+                        <tr>
+                            <th>N Predict</th>
+                            <td>{{ report_summary_dict['metadata']['llm_processing']['n_predict']}}</td>
+                        </tr>
+                        <tr>
+                            <th>CTX size</th>
+                            <td>{{ report_summary_dict['metadata']['llm_processing']['ctx_size']}}</td>
+                        </tr>
+                        <tr>
+                            <th>Grammar</th>
+                            <td style="overflow: hidden;">{{ report_summary_dict['metadata']['llm_processing']['grammar']}}</td>
+                        </tr>
+                        <tr>
+                            <th>JSON Schema</th>
+                            <td style="overflow: hidden;">
+                                {% if 'json_schema' in report_summary_dict['metadata']['llm_processing'] %}
+                                {{ report_summary_dict['metadata']['llm_processing']['json_schema']}}
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="list-group list-group-numbered">
+        {% for report in report_summary_dict['report_list'] %}
+        <a class="list-group-item d-flex justify-content-between align-items-start list-group-item-action" href="{{ url_for('labelannotation.labelannotationviewer', report_id=report['id']) }}">
+            <div class="ms-2 me-auto">
+                <div class="fw-bold">{{report['id']}}</div>
+                <!-- <a href="{{ url_for('labelannotation.labelannotationviewer', report_id=report['id']) }}"
+                    class="btn btn-light float-right">🔎</a> -->
+
+                Acc: {{report['metrics']['overall']['accuracy'] | round(2)}}
+            </div>
+            {% if report['metrics']['overall']['accuracy'] == 1 %}
+            <span class="badge text-bg-success rounded-pill">Acc:
+                {{report['metrics']['overall']['accuracy'] | round(2)}}</span>
+            {% else %}
+            <span class="badge text-bg-danger rounded-pill">Acc:
+                {{report['metrics']['overall']['accuracy'] | round(2)}}</span>
+            {% endif %}
+            </a>
+        {% endfor %}
+    </div>
+</div>
+
+
+<style>
+    .nested-container {
+        padding: 30px 15px;
+    }
+</style>
+</style>
+{% endblock %}

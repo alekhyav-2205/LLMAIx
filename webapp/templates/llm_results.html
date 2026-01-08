@@ -1,0 +1,404 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<style>
+
+
+    .loading-circle {
+        border: 4px solid #f3f3f3;
+        /* Light grey */
+        border-top: 4px solid #3498db;
+        /* Blue */
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 2s linear infinite;
+        margin: 20px auto;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .visible {
+        display: block;
+    }
+
+    .progress {
+        position: relative; /* Set positioning context for the label */
+    }
+    .progress-bar {
+        min-width: 2em; /* Ensure a minimum width for the progress bar */
+    }
+    .progress-label {
+        position: absolute;
+        width: 100%;
+        text-align: center;
+        line-height: 30px; /* Match the height of your progress bar */
+        color: #000; /* Default color for zero progress */
+        z-index: 1; /* Ensure the label is above the progress bar */
+    }
+</style>
+
+<div class="content-section">
+    <h1 class="display-4 text-center mb-3">LLM Processing Progress & Results</h1>
+
+    {% if not model_loaded %}
+    <div id="loading-circle" class="container text-center">
+        <p>Loading Model ...</p>
+        <div class="loading-circle"></div>
+    </div>
+    {% else %}
+    <div id="loading-circle" class="container text-center hidden">
+        <p>Loading Model ...</p>
+        <div class="loading-circle"></div>
+    </div>
+    {% endif %}
+
+    <div class="hidden" id="load_complete">
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            Model loaded successfully.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+
+    <div class="hidden" id="load_failed">
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+
+    {% for job_id, progress_tuple in llm_progress.items() %}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h3 class="card-title">Job {{ job_id }}</h3>
+        <div class="d-flex align-items-center">
+            <div class="flex-grow-1 me-2">
+                <div class="progress" role="progressbar" aria-valuenow="{{ progress_tuple[0] }}" aria-valuemin="0"
+                    aria-valuemax="{{ progress_tuple[1] }}" style="height: 30px;">
+                    {% if progress_tuple[3] %}
+                    <div id="progress-{{ job_id }}" class="progress-bar bg-warning"
+                        style="width: 0%;">
+                        <span class="progress-label" id="progress-label-{{ job_id }}">Canceled</span>
+                    </div>
+
+                    {% elif progress_tuple[0] == progress_tuple[1] %}
+
+                    <div id="progress-{{ job_id }}" class="progress-bar bg-success"
+                        style="width: {{ (progress_tuple[0] / progress_tuple[1]) * 100 }}%;">
+                    </div>
+                    <span class="progress-label" id="progress-label-{{ job_id }}">{{ progress_tuple[0] }} / {{ progress_tuple[1] }} | Completed in {{ progress_tuple[4] }}</span>
+
+
+                    {% elif progress_tuple[2] %}
+                    <div id="progress-{{ job_id }}" class="progress-bar bg-success"
+                        style="width: {{ (progress_tuple[0] / progress_tuple[1]) * 100 }}%;">
+                        <!--<span class="small">{{ progress_tuple[0] }} / {{ progress_tuple[1] }}</span>-->
+                    </div>
+                    <span class="progress-label" id="progress-label-{{ job_id }}">{{ progress_tuple[0] }} / {{ progress_tuple[1] }}</span>
+
+                    {% else %}
+                    <div id="progress-{{ job_id }}" class="progress-bar bg-danger" style="width: 100%;">
+                        <span class="small">{{ progress_tuple[0] }} / {{ progress_tuple[1] }} FAILED</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="ms-3">
+                {% if progress_tuple[3] %}
+                <!--Job has been canceled-->
+                <a id="download-{{ job_id }}" class="btn btn-outline-warning disabled" disabled>Canceled</a>
+                {% elif progress_tuple[0] == progress_tuple[1] %}
+                <a id="download-{{ job_id }}" href="/llm_download?job={{ job_id }}" class="btn btn-outline-success"><i class="bi bi-download"></i> Download</a>
+                {% elif progress_tuple[2] %}
+                <a id="download-{{ job_id }}" class="btn btn-outline-secondary disabled" disabled>Processing...</a>
+                <a id="cancel-{{ job_id }}" href="{{ url_for('llm_processing.cancel_job', job=job_id) }}" class="btn btn-outline-danger">
+                    <i class="bi bi-x-circle"></i>
+                </a>
+                {% else %}
+                <a id="download-{{ job_id }}" class="btn btn-outline-danger disabled" disabled>Failed</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<hr class="bg-danger border-2 border-top border-dark" />
+
+
+    <button id="toggleMetricsButton" class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMetrics"
+        aria-expanded="false" aria-controls="collapseExample">
+        <i class="bi bi-bar-chart-line"></i> llama.cpp Performance Metrics
+    </button>
+
+
+    <div class="collapse" id="collapseMetrics">
+        <div class="card">
+            <div class="card-header">
+                <h3>Llama-CPP Performance Metrics</h3>
+                <div id="countdown_container">Next update in: <span id="countdown">30</span> seconds</div>
+            </div>
+
+            <div id="metrics_container" class="card-body">
+                <div class="loading-circle"></div>
+                <p class="text-center">Waiting for metrics.</p>
+                <p class="text-center">Metrics are only updated while a llm job runs.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="flash-messages" class="container mt-3"></div>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.js"></script>
+<script>
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const progressBars = document.querySelectorAll('.progress-bar');
+            progressBars.forEach(bar => {
+                const label = bar.parentElement.querySelector('.progress-label');
+                const progress = parseFloat(bar.style.width);
+                if (progress > 0) {
+                    label.style.color = '#fff'; // White text on non-zero progress
+                }
+            });
+        });
+
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+    socket.on('llm_progress_update', function (data) {
+        var job_id = data.job_id;
+        var progress = data.progress;
+        var totalSteps = data.total;
+        var remaining_time = data.remaining_time
+
+        // Update progress bar for the corresponding job
+        var progressBar = document.getElementById('progress-' + job_id);
+        if (progressBar) {
+            progressBar.style.width = (progress / totalSteps) * 100 + '%';
+            // progressBar.innerText = progress + ' / ' + totalSteps + ' Remaining Time: ' + remaining_time;
+        }
+
+        var progress_label = document.getElementById('progress-label-' + job_id);
+        if (progress_label) {
+            progress_label.innerText = progress + ' / ' + totalSteps + ' | Remaining Time ' + remaining_time;
+        }
+
+        // make progress label text white if progress is bigger than 50%
+        if (progress > totalSteps * 0.5) {
+            progress_label.style.color = '#fff';
+        }
+    });
+
+    socket.on('llm_progress_complete', function (data) {
+
+        var job_id = data.job_id;
+        var total_time = data.total_time;
+        var progressBar = document.getElementById('progress-' + job_id);
+
+        progressBar.className = 'progress-bar bg-success';
+        progressBar.style.width = '100%';
+        var progress_label = document.getElementById('progress-label-' + job_id);
+        if (progress_label) {
+            progress_label.innerText = progress_label.innerText + ' | Completed in ' + total_time;
+        }
+
+        // Enable download button
+        var downloadLink = document.getElementById('download-' + job_id);
+        downloadLink.href = '/llm_download?job=' + job_id;
+        downloadLink.classList.remove('disabled');
+        downloadLink.classList.remove('btn-outline-secondary');
+        downloadLink.classList.add('btn-outline-success');
+        downloadLink.innerHTML = '<i class="bi bi-download"></i> Download';
+        downloadLink.removeAttribute('disabled');
+
+        // hide cancel button
+        var cancel_button = document.getElementById('cancel-' + job_id);
+        if (cancel_button) {
+            cancel_button.classList.add('hidden');
+        }
+    });
+
+    socket.on('llm_progress_failed', function (data) {
+
+        alert('Job ' + data.job_id + ' failed');
+
+        var job_id = data.job_id;
+        var progressBar = document.getElementById('progress-' + job_id);
+
+        // Make progress bar red and state failure
+        progressBar.className = 'progress-bar bg-danger';
+        progressBar.innerText = 'Failed';
+        progressBar.style.width = '100%';
+
+        var downloadLink = document.getElementById('download-' + job_id);
+        downloadLink.classList.add('disabled');
+        downloadLink.setAttribute('disabled', 'disabled');
+        downloadLink.className = 'btn btn-danger disabled';
+        downloadLink.innerHTML = 'Failed';
+
+        // hide cancel button
+        var cancel_button = document.getElementById('cancel-' + job_id);
+        if (cancel_button) {
+            cancel_button.classList.add('hidden');
+        }
+
+    });
+
+    socket.on('llm_progress_canceled', function (data) {
+        // alert('Job ' + data.job_id + ' was canceled');
+
+        var job_id = data.job_id;
+        var progressBar = document.getElementById('progress-' + job_id);
+
+        // Make progress bar yellow and state canceled
+        progressBar.className = 'progress-bar bg-warning';
+        progressBar.innerText = 'Canceled';
+        progressBar.style.width = '100%';
+
+        // set progress_label to empty string
+        var progress_label = document.getElementById('progress-label-' + job_id);
+        if (progress_label) {
+            progress_label.innerText = '';
+        }
+
+        // hide cancel button
+        var cancel_button = document.getElementById('cancel-' + job_id);
+        if (cancel_button) {
+            cancel_button.classList.add('hidden');
+        }
+
+        // make download button disabled, write "Canceled" and change color to warning
+        var downloadLink = document.getElementById('download-' + job_id);
+        downloadLink.classList.add('disabled');
+        downloadLink.setAttribute('disabled', 'disabled');
+        downloadLink.className = 'btn btn-warning disabled';
+        downloadLink.innerHTML = 'Canceled';
+    });
+
+    socket.on('load_failed', function () {
+        document.getElementById('load_failed').classList.remove('hidden');
+        alert('Loading the model failed!')
+    });
+
+    socket.on('load_complete', function () {
+        document.getElementById('loading-circle').classList.add('hidden');
+        document.getElementById('load_complete').classList.remove('hidden');
+    });
+
+    {# socket.on('llm_metrics', function (data) {
+        var metrics = data.metrics;
+        var tableHTML = '<table class="table table-bordered table-striped table-hover">';
+        tableHTML += '<thead><tr><th scope="col">Metric</th><th scope="col">Value</th></tr></thead><tbody>';
+
+        for (var key in metrics) {
+            if (metrics.hasOwnProperty(key)) {
+                tableHTML += '<tr><th scope="row">' + key + '</th><td>' + metrics[key] + '</td></tr>';
+            }
+        }
+
+        tableHTML += '</tbody></table>';
+
+        document.getElementById('metrics_container').innerHTML = tableHTML;
+    }); #}
+
+    const updateInterval = 10000; // 10 seconds in milliseconds
+    let countdown = updateInterval / 1000; // Initial countdown value in seconds
+
+    function updateMetrics() {
+        fetch('/metrics')
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('metrics_container').innerHTML = '<div class="alert alert-danger">' + data.error + '</div>';
+                } else {
+                    var metrics = data;
+                    var tableHTML = '<table class="table table-bordered table-striped table-hover">';
+                    tableHTML += '<thead><tr><th scope="col">Metric</th><th scope="col">Value</th></tr></thead><tbody>';
+
+                    for (var key in metrics) {
+                        if (metrics.hasOwnProperty(key)) {
+                            tableHTML += '<tr><th scope="row">' + key + '</th><td>' + metrics[key] + '</td></tr>';
+                        }
+                    }
+
+                    tableHTML += '</tbody></table>';
+
+                    document.getElementById('metrics_container').innerHTML = tableHTML;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching metrics:', error);
+                document.getElementById('metrics_container').innerHTML = '<div class="alert alert-danger">Error fetching metrics.</div>';
+            });
+    }
+
+    function startCountdown() {
+        countdown = updateInterval / 1000; // Reset countdown value
+        document.getElementById('countdown').textContent = countdown;
+
+        const countdownInterval = setInterval(() => {
+            countdown--;
+            document.getElementById('countdown').textContent = countdown;
+
+            if (countdown <= 0) {
+                clearInterval(countdownInterval);
+                if (isMetricsExpanded()) {
+
+                    updateMetrics();
+                }
+                startCountdown(); // Restart countdown after updating metrics
+            }
+        }, 1000); // Update countdown every second
+    }
+
+    // Initial call to populate the table and start the countdown
+    updateMetrics();
+    startCountdown();
+
+    function isMetricsExpanded() {
+        var toggleButton = document.getElementById("toggleMetricsButton");
+        return toggleButton.getAttribute("aria-expanded") === "true";
+    }
+    
+
+
+    socket.on('progress_warning', function (data) {
+        var job_id = data.job_id;
+        var warning_message = data.message;
+        var progressBar = document.getElementById('progress-' + job_id);
+        progressBar.className = 'progress-bar bg-warning';
+
+        var flashMessageContainer = document.getElementById('flash-messages');
+        var flashMessage = document.createElement('div');
+        flashMessage.className = 'alert alert-warning alert-dismissible fade show';
+        flashMessage.role = 'alert';
+        flashMessage.innerHTML = '<strong>Warning!</strong> ' + warning_message +
+            '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+        flashMessageContainer.appendChild(flashMessage);
+
+        // Close flashed message when close button is clicked
+        flashMessage.querySelector('.btn-close').addEventListener('click', function () {
+            flashMessageContainer.removeChild(flashMessage);
+        });
+    });
+
+
+
+</script>
+
+{% endblock content %}

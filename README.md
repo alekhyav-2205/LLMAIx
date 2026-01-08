@@ -1,3 +1,16 @@
+## Capstone Context (This Fork)
+
+This repository is a fork of the original KatherLab/LLMAIx project.
+
+This fork supports the capstone project:
+**Feasibility of Implementing a Large Language Model Pipeline for Rapid Prototyping of Clinical Text Extraction**
+
+Modifications in this fork focus on local workflow and reproducibility improvements (pipeline-level adjustments).  
+The original **AGPL-3.0** license is preserved (see `LICENSE`).
+
+
+
+
 [![Build and Push Docker Image](https://github.com/KatherLab/LLMAnonymizer/actions/workflows/docker-image.yml/badge.svg)](https://github.com/KatherLab/LLMAnonymizer/actions/workflows/docker-image.yml)
 
 # LLM-AIx - Information Extraction & Anonymization

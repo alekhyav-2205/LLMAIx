@@ -32,6 +32,7 @@ cp models/config.example.yml models/config.yml
 
 # Download TinyLlama Q4_K_M GGUF and place it in ./models
 docker compose up --build
+```
 
 Open in browser:
 

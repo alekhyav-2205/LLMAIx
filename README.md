@@ -1,13 +1,48 @@
-## Capstone Context (This Fork)
+## Capstone Context
 
-This repository is a fork of the original KatherLab/LLMAIx project.
+This repository is a fork of the original **KatherLab/LLMAIx** project.
 
 This fork supports the capstone project:
 **Feasibility of Implementing a Large Language Model Pipeline for Rapid Prototyping of Clinical Text Extraction**
 
-Modifications in this fork focus on local workflow and reproducibility improvements (pipeline-level adjustments).  
-The original **AGPL-3.0** license is preserved (see `LICENSE`).
+### Purpose of This Fork
+The purpose of this fork is **not** to extend LLMAIx features, but to evaluate:
 
+- Feasibility of running an end-to-end LLM-based clinical text extraction pipeline **fully locally**
+- Reproducibility of installation and execution using **CPU-only Docker**
+- Setup friction and usability for external reviewers
+
+This fork prioritizes **local execution, reproducibility, and usability** over performance or accuracy.
+
+### How Users Should Use This Repository
+Users are expected to:
+1. Install Docker
+2. Download **one GGUF model** (TinyLlama Q4_K_M)
+3. Run the pipeline using the provided Docker setup
+4. Provide feedback on installation and first-run experience
+
+Model accuracy, throughput, and GPU optimization are **out of scope** for this evaluation.
+
+### Quickstart (CPU, Docker)
+```bash
+git clone <REPO_URL>
+cd <REPO_NAME>
+
+cp models/config.example.yml models/config.yml
+
+# Download TinyLlama Q4_K_M GGUF and place it in ./models
+docker compose up --build
+
+Open in browser:
+
+http://localhost:19999
+Model download (required):
+https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/blob/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+
+License
+
+The original AGPL-3.0 license is preserved (see LICENSE).
+All original documentation below is retained from the upstream repository.
 
 
 

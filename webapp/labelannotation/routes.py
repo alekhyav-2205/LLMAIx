@@ -171,12 +171,31 @@ def calculate_metrics_multiclass(annotation_label, llm_output_label, all_classes
     
     return metrics
 
+def normalize_to_yes_no(val):
+    # normalize booleans
+    if val is True:
+        return "yes"
+    if val is False:
+        return "no"
+
+    # normalize strings
+    if val is None:
+        return ""
+    s = str(val).strip().lower()
+
+    if s in ["yes", "y", "true", "t", "1", "ja"]:
+        return "yes"
+    if s in ["no", "n", "false", "f", "0", "nein"]:
+        return "no"
+
+    return s
+
 
 
 def calculate_metrics_boolean(annotation_label, llm_output_label, label_name):
     # Convert labels to boolean
-    annotation_label = annotation_label.lower() in ["true", "1", "yes", "y", "ja"]
-    llm_output_label = llm_output_label.lower() in ["true", "1", "yes", "y", "ja"]
+    annotation_label = normalize_to_yes_no(annotation_label) == "yes"
+    llm_output_label = normalize_to_yes_no(llm_output_label) == "yes"
 
     # Convert to lists for sklearn compatibility
     y_true = [annotation_label]

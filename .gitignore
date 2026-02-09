@@ -16,6 +16,11 @@ logs/
 
 # Large model files
 models/
+!models/
+!models/.gitkeep
+!models/config.example.yml
+models/config.yml
+models/config.yml.save
 *.gguf
 *.bin
 llama.cpp/

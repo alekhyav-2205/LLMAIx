@@ -1,0 +1,15 @@
+models:
+  - name: "tinyllama_cpu"
+    display_name: "TinyLlama (CPU example)"
+    file_name: "tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
+    model_context_size: 4096 
+    kv_cache_size: 256 
+    kv_cache_quants: "q4_0"
+    flash_attention: false 
+    mlock: false
+    server_slots: 1 
+    seed: 42 
+    n_gpu_layers: 0 
+
+#python3 app.py --port 19999 --server_path ./server
+#python3 app.py --port 19999 --server_path ./server --config_file models/config.example.yml

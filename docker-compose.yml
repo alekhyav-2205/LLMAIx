@@ -2,14 +2,15 @@ services:
   web:
     build: 
       context: .
-      dockerfile: Dockerfile_metal
-    image: ghcr.io/katherlab/llmaix-metal:latest
+      dockerfile: Dockerfile_cpu
+    image: llmaix-cpu:local
+
     ports:
       - "19999:${PORT:-5000}"
     volumes:
       - ./models:/models
     environment:
-      - SERVER_PATH=${SERVER_PATH:-/build/llama.cpp/llama-server}
+      - SERVER_PATH=/usr/local/bin/llama-server
       - PORT=${PORT:-5000}
       - HOST=${HOST:-0.0.0.0}
       - CONFIG_FILE=${CONFIG_FILE:-/models/config.yml}

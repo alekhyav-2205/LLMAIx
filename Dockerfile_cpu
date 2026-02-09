@@ -75,7 +75,8 @@ COPY . .
 ENV LLAMA_ARG_HOST=0.0.0.0
 ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
-HEALTHCHECK CMD [ "curl", "-f", "http://localhost:8080/health" ]
+HEALTHCHECK CMD [ "curl", "-f", "http://localhost:5000/health" ]
+
 EXPOSE 5000
 
 CMD [".venv/bin/python", "app.py", "--server_path", "/usr/local/bin/llama-server", "--model_path", "/models"]

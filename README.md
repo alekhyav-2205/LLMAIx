@@ -31,18 +31,25 @@ git clone <REPO_URL>
 cd <REPO_NAME>
 ```
 2. Install Docker
+https://www.docker.com/products/docker-desktop/
 
 3. Download **one GGUF model** (TinyLlama Q4_K_M)
   Model download (required):
 https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/blob/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
-2. Rename the model to: **tinyllama.gguf**; Place it inside: ./models/ directory
-3. Run the pipeline using the provided Docker setup
+4. Rename the model to: **tinyllama.gguf**; Place it inside: ./models/ directory
+5. Run the pipeline using the provided Docker setup
 ```bash
 # Ensure the model is placed in ./models
 docker compose up --build
 ```
-4. Open the port in browser and ensure it is not already in use: http://localhost:19999
-5. Provide feedback on installation and first-run experience
+6. Open the port in browser and ensure it is not already in use: http://localhost:19999
+7. Upload the sample data in the **Preprocessing** tab and complete preproceesing (no need to configure any other features).
+8. Download the preprocessed .zip file and move to the **LLM Information Extraction** tab. 
+9. Upload the .zip file, name the job as "Trial Review" and select the model "tinyllama.gguf" from the dropdown.
+10. Set the model parameters to default: Temperature - 0; top_k - 30;  top_p - 0.9; NUmber of predictions - 2048.
+11. Paste the prompt into the designated input field.
+12. Select **JSON Schema** and create the required fields using the **JSON Schema Builder**. Set all fields to the Boolean data type, then click Upload Schema.
+13. Run the LLM Processing and wait for the output to download. Record the runtime and review the results in the **Results** tab.
 
 License
 

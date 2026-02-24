@@ -6,39 +6,43 @@ This fork supports the capstone project:
 **Feasibility of Implementing a Large Language Model Pipeline for Rapid Prototyping of Clinical Text Extraction**
 
 ### Purpose of This Fork
-The purpose of this fork is **not** to extend LLMAIx features, but to evaluate:
+The purpose of this fork is to evaluate:
 
 - Feasibility of running an end-to-end LLM-based clinical text extraction pipeline **fully locally**
 - Reproducibility of installation and execution using **CPU-only Docker**
 - Setup friction and usability for external reviewers
 
-This fork prioritizes **local execution, reproducibility, and usability** over performance or accuracy.
+This fork prioritizes **local execution, reproducibility, and usability**. Model accuracy, throughput, and GPU optimization are **out of scope** for this evaluation.
+
+
+System Requirements
+1. macOS (Apple Silicon recommended) or Linux
+2. Windows 10/11 with WSL2 enabled (If using Windows, ensure WSL2 is enabled:
+https://learn.microsoft.com/windows/wsl/install)
+3. Docker Desktop (v4+)
+4. Minimum 8 GB RAM (16 GB recommended)
+
 
 ### How Users Should Use This Repository
 Users are expected to:
-1. Install Docker
-2. Download **one GGUF model** (TinyLlama Q4_K_M)
-3. Run the pipeline using the provided Docker setup
-4. Provide feedback on installation and first-run experience
-
-Model accuracy, throughput, and GPU optimization are **out of scope** for this evaluation.
-
-### Quickstart (CPU, Docker)
+1. Clone repo
 ```bash
 git clone <REPO_URL>
 cd <REPO_NAME>
+```
+2. Install Docker
 
-cp models/config.example.yml models/config.yml
-
-# Download TinyLlama Q4_K_M GGUF and place it in ./models
+3. Download **one GGUF model** (TinyLlama Q4_K_M)
+  Model download (required):
+https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/blob/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+2. Rename the model to: **tinyllama.gguf**; Place it inside: ./models/ directory
+3. Run the pipeline using the provided Docker setup
+```bash
+# Ensure the model is placed in ./models
 docker compose up --build
 ```
-
-Open in browser:
-
-http://localhost:19999
-Model download (required):
-https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/blob/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+4. Open the port in browser and ensure it is not already in use: http://localhost:19999
+5. Provide feedback on installation and first-run experience
 
 License
 
